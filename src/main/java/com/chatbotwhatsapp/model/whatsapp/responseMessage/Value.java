@@ -1,4 +1,4 @@
-package com.chatbotwhatsapp.model.requestMessage;
+package com.chatbotwhatsapp.model.whatsapp.responseMessage;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
