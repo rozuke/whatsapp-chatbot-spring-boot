@@ -24,6 +24,8 @@ public class ChatGPTClientService {
     @Value("${chatgpt.api.url}")
     private String chatgptAPIURL;
 
+    private final String gptModel = "gpt-3.5-turbo";
+
     public String sendRequestChatGPT(String context) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -34,13 +36,17 @@ public class ChatGPTClientService {
         ResponseEntity<String> response = restTemplate.postForEntity(chatgptAPIURL, entity, String.class);
 
         String textContext = response.getBody();
-        System.out.println("Chatgpt response " + textContext);
-        return  textContext;
+        if (textContext != null && !textContext.isEmpty()) {
+
+            return  textContext;
+        }
+        return "";
+
     }
 
     private RequestChatGPT formatChatGPTRequest(String context) {
         return new RequestChatGPT(
-                "gpt-3.5-turbo",
+                gptModel,
                 new ArrayList<>(List.of(new MessageGPT("user", context))),
                 0.7
         );
