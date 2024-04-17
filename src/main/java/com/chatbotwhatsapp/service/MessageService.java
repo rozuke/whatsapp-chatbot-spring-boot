@@ -48,7 +48,9 @@ public class MessageService {
             if (existPhoneNumber(phoneNumber)) {
                 return whatsAppService.sendPostRequestMessage(messageBody);
             } else {
+                whatsAppService.sendPostRequestMessage(messageBody);
                 userRepository.save(new User(phoneNumber, name));
+
             }
 
         }
