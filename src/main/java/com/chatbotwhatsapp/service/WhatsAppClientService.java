@@ -32,7 +32,7 @@ public class WhatsAppClientService {
 
         if (message != null && !message.isEmpty()) {
 
-            String responseJson = chatgptService.sendRequestChatGPT(message);
+            String responseJson = chatgptService.getResponseFromAIModel(message);
             Gson gson = new Gson();
             ResponseChatGPT  responseChatGPT = gson.fromJson(responseJson, ResponseChatGPT.class);
             var responseContextBody =  responseChatGPT.getChoices().get(0).getMessage().getContent();
