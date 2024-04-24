@@ -48,7 +48,7 @@ public class GeminiClientService implements AIModelService {
             return response;
         }
 
-        return "Algo salio mal";
+        return "";
     }
 
     private String getResponseFromBody(JsonElement jsonElement) {

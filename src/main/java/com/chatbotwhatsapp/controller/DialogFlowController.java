@@ -20,7 +20,7 @@ public class DialogFlowController {
 
     @PostMapping("/webhook")
     public ResponseEntity<String> postProcessedRequest(@RequestBody String json) {
-        System.out.println(json );
+
         return new ResponseEntity<>(dialogFlowClient.sendResponseFromWebhook(json), HttpStatus.OK);
 
     }

@@ -16,6 +16,7 @@ public class DialogFlowClient {
 
 
     public String sendResponseFromWebhook(String request) {
+
         Gson gson = new GsonBuilder().create();
         JsonObject parsedRequest = gson.fromJson(request, JsonObject.class);
         String requestTag = parsedRequest.getAsJsonObject("fulfillmentInfo").getAsJsonPrimitive("tag").toString();
