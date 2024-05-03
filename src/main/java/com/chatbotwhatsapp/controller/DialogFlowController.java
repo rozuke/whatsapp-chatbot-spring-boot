@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/dialogflow")
@@ -15,15 +17,8 @@ public class DialogFlowController {
     private DialogFlowClient dialogFlowClient;
 
 
-    @PostMapping("/webhook")
-    public ResponseEntity<String> postProcessedRequest(@RequestBody String json) {
-
-        return new ResponseEntity<>(dialogFlowClient.sendResponseFromWebhook(json), HttpStatus.OK);
-
-    }
-
     @PostMapping("/response")
-    public ResponseEntity<String> postProcessRequestFromPostman(@RequestBody String json) {
+    public ResponseEntity<List<String>> postProcessRequestFromPostman(@RequestBody String json) {
         return new ResponseEntity<>(dialogFlowClient.processMessageFromDialogFlow(json), HttpStatus.OK);
     }
 

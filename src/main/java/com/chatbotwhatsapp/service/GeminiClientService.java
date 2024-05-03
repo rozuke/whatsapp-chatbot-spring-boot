@@ -4,6 +4,7 @@ import com.chatbotwhatsapp.model.gemini.RequestGemini;
 import com.chatbotwhatsapp.model.gemini.requestGemini.Content;
 import com.chatbotwhatsapp.model.gemini.requestGemini.Part;
 import com.chatbotwhatsapp.service.interfaces.AIModelService;
+import com.chatbotwhatsapp.util.ChatBotReader;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -30,19 +31,19 @@ public class GeminiClientService implements AIModelService {
     @Value("${gemini.api.key}")
     private String key;
 
+    private final String PROMPT = ChatBotReader.getPrompt();
+
 
     @Override
     public String getResponseFromAIModel(String context) {
-
         String formatURL = geminiURL + key;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         RequestGemini requestGemini = formatRequestFromGemini(context);
         HttpEntity<RequestGemini> entity = new HttpEntity<>(requestGemini, headers);
-
         ResponseEntity<String> request = restTemplate.postForEntity(formatURL, entity, String.class);
-
         String response = getResponseFromBody(JsonParser.parseString(request.getBody()));
+
         if (response != null && !response.isEmpty()) {
             return response;
         }
@@ -63,9 +64,7 @@ public class GeminiClientService implements AIModelService {
                 if (partsArray != null && !partsArray.isEmpty()) {
                     JsonObject part = partsArray.get(0).getAsJsonObject();
                     response = part.getAsJsonPrimitive("text").getAsString();
-
                     return response;
-
                 }
             }
         }
@@ -73,9 +72,8 @@ public class GeminiClientService implements AIModelService {
     }
 
     private RequestGemini formatRequestFromGemini(String text) {
-
         return new RequestGemini(new ArrayList<>(List.of(
-                new Content(new ArrayList<>(List.of(new Part(text))))
+                new Content(new ArrayList<>(List.of(new Part(PROMPT + text))))
         )));
 
     }
