@@ -44,7 +44,6 @@ public class GeminiClientService implements AIModelService {
 
         String response = getResponseFromBody(JsonParser.parseString(request.getBody()));
         if (response != null && !response.isEmpty()) {
-            System.out.println(response);
             return response;
         }
 

@@ -1,5 +1,6 @@
 package com.chatbotwhatsapp.service;
 
+import com.chatbotwhatsapp.util.ChatBotReader;
 import com.google.cloud.dialogflow.cx.v3.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -8,6 +9,7 @@ import com.google.gson.JsonParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 import java.io.IOException;
 import java.util.UUID;
 
@@ -27,6 +29,9 @@ public class DialogFlowClient {
     @Value("${dialogflow.api.region-id}")
     private String regionId;
 
+    private final String API_DIRECTION = "-dialogflow.googleapis.com:443";
+
+    private final String PROMPT = ChatBotReader.getPrompt();
 
 
     public String sendResponseFromWebhook(String request) {
@@ -46,36 +51,43 @@ public class DialogFlowClient {
     }
 
     public String processMessageFromDialogFlow(String json) {
-
         String intentMessage = extractTextFromJSON(json);
+        UUID sessionId;
         try {
                 SessionsSettings.Builder sessionsSettings = SessionsSettings
                         .newBuilder()
-                        .setEndpoint(regionId + "-dialogflow.googleapis.com:443");
+                        .setEndpoint(regionId + API_DIRECTION);
+
                 try (SessionsClient sessionsClient = SessionsClient.create(sessionsSettings.build())) {
-
-                    DetectIntentResponse detectIntentResponse = getIntentResponseFromDialogflow(intentMessage, sessionsClient);
-
-                    if (existMessages(detectIntentResponse)) {
-                        return detectIntentResponse.getQueryResult().getResponseMessages(0).getText().getText(0);
-                    } else {
-                        return "Lo siento, no entendí lo que dijiste.";
-                    }
+                    sessionId = UUID.randomUUID();
+                    DetectIntentResponse detectIntentResponse = getIntentResponseFromDialogflow(intentMessage, sessionId.toString(),sessionsClient);
+                    return getProcessedMessageFromGeminiAI(detectIntentResponse);
                 }
             } catch (IOException e) {
                 return "Un momento por favor";
             }
+    }
 
-
+    private String getProcessedMessageFromGeminiAI(DetectIntentResponse detectIntentResponse) {
+        if (existMessages(detectIntentResponse)) {
+            for (ResponseMessage message: detectIntentResponse.getQueryResult().getResponseMessagesList()) {
+                if (!message.getText().getTextList().isEmpty()) {
+                    String dialogflowResponse = message.getText().getText(0);
+                        String formatString = PROMPT + dialogflowResponse;
+                        return geminiClient.getResponseFromAIModel(formatString);
+                }
+            }
+        }
+        return "";
     }
 
     private boolean existMessages(DetectIntentResponse detectIntentResponse) {
         return detectIntentResponse.getQueryResult().getResponseMessagesCount() > 0;
     }
 
-    private DetectIntentResponse getIntentResponseFromDialogflow(String message, SessionsClient sessionsClient) {
-        UUID sessionId = UUID.randomUUID();
-        SessionName sessionName = SessionName.ofProjectLocationAgentSessionName(projectId, regionId, agentId, sessionId.toString());
+    private DetectIntentResponse getIntentResponseFromDialogflow(String message, String sessionId, SessionsClient sessionsClient) {
+
+        SessionName sessionName = SessionName.ofProjectLocationAgentSessionName(projectId, regionId, agentId, sessionId);
         QueryInput queryInput = QueryInput.newBuilder()
                 .setText(
                         TextInput.newBuilder()
