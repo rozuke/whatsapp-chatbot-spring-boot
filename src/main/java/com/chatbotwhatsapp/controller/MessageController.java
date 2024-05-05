@@ -6,17 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 @RestController
 @RequestMapping()
 public class MessageController {
 
-    private final Lock messageLock = new ReentrantLock();
-    private int count = 0;
 
     @Autowired
     private MessageService messageService;
