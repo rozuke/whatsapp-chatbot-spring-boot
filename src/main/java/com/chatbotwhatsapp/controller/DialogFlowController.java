@@ -19,7 +19,7 @@ public class DialogFlowController {
 
     @PostMapping("/response")
     public ResponseEntity<List<String>> postProcessRequestFromPostman(@RequestBody String json) {
-        return new ResponseEntity<>(dialogFlowClient.processMessageFromDialogFlow(json), HttpStatus.OK);
+        return new ResponseEntity<>(dialogFlowClient.getResponseMessageProcessed(json), HttpStatus.OK);
     }
 
 }

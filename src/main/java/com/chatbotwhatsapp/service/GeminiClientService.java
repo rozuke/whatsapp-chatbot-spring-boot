@@ -4,7 +4,7 @@ import com.chatbotwhatsapp.model.gemini.RequestGemini;
 import com.chatbotwhatsapp.model.gemini.requestGemini.Content;
 import com.chatbotwhatsapp.model.gemini.requestGemini.Part;
 import com.chatbotwhatsapp.service.interfaces.AIModelService;
-import com.chatbotwhatsapp.util.ChatBotReader;
+import com.chatbotwhatsapp.util.ChatBotConstant;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -31,7 +31,7 @@ public class GeminiClientService implements AIModelService {
     @Value("${gemini.api.key}")
     private String key;
 
-    private final String PROMPT = ChatBotReader.getPrompt();
+    private final String PROMPT = ChatBotConstant.getPrompt();
 
 
     @Override

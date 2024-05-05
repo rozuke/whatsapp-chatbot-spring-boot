@@ -1,8 +1,7 @@
 package com.chatbotwhatsapp.service;
 
+import com.chatbotwhatsapp.util.ChatBotConstant;
 import com.google.cloud.dialogflow.cx.v3.*;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
 
 @Service
 public class DialogFlowClient {
@@ -28,37 +28,48 @@ public class DialogFlowClient {
 
     @Value("${dialogflow.api.region-id}")
     private String regionId;
+
+    private UUID sessionId = UUID.randomUUID();
     private final String API_DIRECTION = "-dialogflow.googleapis.com:443";
 
-    public List<String> processMessageFromDialogFlow(String json) {
+    public List<String> getResponseMessageProcessed(String json) {
         String intentMessage = extractTextFromJSON(json);
-        UUID sessionId;
         try {
                 SessionsSettings.Builder sessionsSettings = SessionsSettings
                         .newBuilder()
                         .setEndpoint(regionId + API_DIRECTION);
 
                 try (SessionsClient sessionsClient = SessionsClient.create(sessionsSettings.build())) {
-                    sessionId = UUID.randomUUID();
                     DetectIntentResponse detectIntentResponse = getIntentResponseFromDialogflow(intentMessage, sessionId.toString(),sessionsClient);
-                    return getProcessedMessageFromGeminiAI(detectIntentResponse);
+                    return getMessages(detectIntentResponse);
                 }
             } catch (IOException e) {
                 return List.of("No se sobre eso");
             }
     }
 
-    private List<String> getProcessedMessageFromGeminiAI(DetectIntentResponse detectIntentResponse) {
+    private List<String> getMessages(DetectIntentResponse detectIntentResponse) {
         List<String> processedMessages = new ArrayList<>();
         if (existMessages(detectIntentResponse)) {
             for (ResponseMessage message: detectIntentResponse.getQueryResult().getResponseMessagesList()) {
                 if (!message.getText().getTextList().isEmpty()) {
-                    String processedMessage = geminiClient.getResponseFromAIModel(message.getText().getText(0));
-                    processedMessages.add(processedMessage);
+                    String text = message.getText().getText(0);
+                    if (isURL(text)) {
+                        processedMessages.add(text);
+                    } else {
+                        String processedMessage = geminiClient.getResponseFromAIModel(text);
+                        processedMessages.add(processedMessage);
+                    }
+
                 }
             }
         }
         return processedMessages;
+    }
+
+    private boolean isURL(String url){
+        Matcher matcher = ChatBotConstant.URL_PATTERN.matcher(url);
+        return matcher.matches();
     }
 
     private boolean existMessages(DetectIntentResponse detectIntentResponse) {
