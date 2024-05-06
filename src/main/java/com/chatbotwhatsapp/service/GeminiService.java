@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class GeminiClientService implements AIModelService {
+public class GeminiService implements AIModelService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 

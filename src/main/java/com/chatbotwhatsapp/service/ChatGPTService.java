@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class ChatGPTClientService implements AIModelService {
+public class ChatGPTService implements AIModelService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 

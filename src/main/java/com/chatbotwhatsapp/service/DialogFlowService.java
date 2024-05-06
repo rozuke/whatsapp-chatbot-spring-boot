@@ -14,11 +14,11 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 
 @Service
-public class DialogFlowClient {
+public class DialogFlowService {
 
 
     @Autowired
-    private GeminiClientService geminiClient;
+    private GeminiService geminiClient;
 
     @Value("${dialogflow.api.project-id}")
     private String projectId;

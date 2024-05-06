@@ -1,81 +1,52 @@
 package com.chatbotwhatsapp.service;
 
-import com.chatbotwhatsapp.model.whatsapp.responseMessage.Message;
-import com.chatbotwhatsapp.model.whatsapp.responseMessage.ResponseMessage;
-import com.chatbotwhatsapp.persistence.crud.UserRepository;
-import com.chatbotwhatsapp.persistence.entity.User;
-import com.google.gson.Gson;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.chatbotwhatsapp.model.whatsapp.requestMessage.RequestMessage;
+import com.chatbotwhatsapp.model.whatsapp.requestMessage.TextResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class ResponseMessageService {
 
-    @Autowired
-    private WhatsAppClientService whatsAppService;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Value("${whatsapp.verification.token}")
-    private String verificationToken;
+    private final RestTemplate restTemplate = new RestTemplate();
 
 
-    public ResponseEntity<String> webhookVerify(String mode, String challenge, String token) {
-        if (mode.equals("subscribe") && token.equals(verificationToken)) {
-            return new ResponseEntity<>(challenge, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Verification token or mode mismatch", HttpStatus.FORBIDDEN);
-        }
-    }
+    @Value("${whatsapp.webhook.url}")
+    private String whatsappWebhookURL;
+    @Value("${whatsapp.api.token}")
+    private String bearerToken;
+    @Value("${whatsapp.phone.number.test}")
+    private String phoneNumber;
 
-    public String responseMessage(String messageJson) {
+    public String sendPostRequestMessage(String message) {
+        System.out.println("*******WhatsApp Message********");
+        System.out.println(message);
 
-        Gson gson = new Gson();
-        ResponseMessage responseMessage = gson.fromJson(messageJson, ResponseMessage.class);
-        var listMessages = getListOfMessages(responseMessage);
+        if (message != null && !message.isEmpty()) {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.set("Authorization", "Bearer " + bearerToken);
+                RequestMessage messageRequest = formatMessage(message);
+                HttpEntity<RequestMessage> entity = new HttpEntity<>(messageRequest, headers);
 
-        if (listMessages != null && !listMessages.isEmpty()) {
-            String name = getNameFromResponse(responseMessage);
-            String phoneNumber = getPhoneNumberFromMessage(listMessages);
-            String messageBody = getMessage(listMessages);
-
-            if (existPhoneNumber(phoneNumber)) {
-                return whatsAppService.sendPostRequestMessage(messageBody);
-            } else {
-                whatsAppService.sendPostRequestMessage(messageBody);
-                userRepository.save(new User(phoneNumber, name));
-
-            }
-
+                ResponseEntity<String> responseEntity = restTemplate.postForEntity(whatsappWebhookURL, entity, String.class);
+                return responseEntity.getBody();
         }
         return "";
     }
 
-    private List<Message> getListOfMessages(ResponseMessage responseMessage){
-        return responseMessage.getEntry().get(0).getChanges().get(0).getValue().getMessages();
+
+    private RequestMessage formatMessage (String message) {
+        return new RequestMessage("whatsapp",
+                "individual",
+                phoneNumber,
+                "text",
+                new TextResponse(false, message)
+        );
     }
-
-    private String getNameFromResponse(ResponseMessage responseMessage){
-        return responseMessage.getEntry().get(0).getChanges().get(0).getValue().getContacts().get(0).getProfile().getName();
-    }
-
-    private String getMessage(List<Message> messages) {
-        return messages.get(0).getText().getBody();
-    }
-
-    private String getPhoneNumberFromMessage(List<Message> messages) {
-        return messages.get(0).getFrom();
-    }
-
-    private boolean existPhoneNumber(String phoneNumber) {
-
-        return userRepository.findByPhoneNumber(phoneNumber).isPresent();
-    }
-
 }
