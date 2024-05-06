@@ -32,8 +32,7 @@ public class DialogFlowService {
     private UUID sessionId = UUID.randomUUID();
     private final String API_DIRECTION = "-dialogflow.googleapis.com:443";
 
-    public List<String> getResponseMessageProcessed(String json) {
-        String intentMessage = extractTextFromJSON(json);
+    public List<String> getResponseMessageProcessed(String intentMessage) {
         try {
                 SessionsSettings.Builder sessionsSettings = SessionsSettings
                         .newBuilder()
