@@ -18,8 +18,6 @@ public class WhatsAppClientService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    @Autowired
-    private ChatGPTClientService chatgptService;
 
     @Value("${whatsapp.webhook.url}")
     private String whatsappWebhookURL;
@@ -29,30 +27,23 @@ public class WhatsAppClientService {
     private String phoneNumber;
 
     public String sendPostRequestMessage(String message) {
+        System.out.println("*******WhatsApp Message********");
+        System.out.println(message);
 
         if (message != null && !message.isEmpty()) {
-
-            String responseJson = chatgptService.getResponseFromAIModel(message);
-            Gson gson = new Gson();
-            ResponseChatGPT  responseChatGPT = gson.fromJson(responseJson, ResponseChatGPT.class);
-            var responseContextBody =  responseChatGPT.getChoices().get(0).getMessage().getContent();
-
-            if (!responseContextBody.isEmpty()) {
-
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 headers.set("Authorization", "Bearer " + bearerToken);
-                RequestMessage messageRequest = formatMessage(responseContextBody);
+                RequestMessage messageRequest = formatMessage(message);
                 HttpEntity<RequestMessage> entity = new HttpEntity<>(messageRequest, headers);
 
                 ResponseEntity<String> responseEntity = restTemplate.postForEntity(whatsappWebhookURL, entity, String.class);
                 return responseEntity.getBody();
-            }
-
         }
         return "";
     }
-    
+
+
     private RequestMessage formatMessage (String message) {
         return new RequestMessage("whatsapp",
                 "individual",
