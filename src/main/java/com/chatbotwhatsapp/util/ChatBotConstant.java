@@ -12,7 +12,9 @@ public class ChatBotConstant {
     private static final String URL_REGEX = "^(http|https)://([a-zA-Z0-9.-]+)\\.([a-zA-Z]{2,6})(:[0-9]{1,5})?(/.*)?$";
     public static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
 
-    public static String getPrompt() {
+    public static final String PROMPT = getPrompt();
+
+    private static String getPrompt() {
         String jsonFilePath = "bot.json";
 
         try (Reader reader = new FileReader(jsonFilePath)) {

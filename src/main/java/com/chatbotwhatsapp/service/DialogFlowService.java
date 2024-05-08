@@ -49,8 +49,11 @@ public class DialogFlowService {
 
     private List<String> getMessages(DetectIntentResponse detectIntentResponse) {
         List<String> processedMessages = new ArrayList<>();
+        System.out.println("*********Intent**********");
+        System.out.println(detectIntentResponse.getQueryResult().getCurrentPage().getDisplayName());
         if (existMessages(detectIntentResponse)) {
             for (ResponseMessage message: detectIntentResponse.getQueryResult().getResponseMessagesList()) {
+
                 if (!message.getText().getTextList().isEmpty()) {
                     String text = message.getText().getText(0);
                     if (isURL(text)) {

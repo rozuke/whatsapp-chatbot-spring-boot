@@ -61,9 +61,8 @@ public class ResponseMessageService {
 
             List<String> listResponse = dialogFlowService.getResponseMessageProcessed(messageBody);
             for (String response: listResponse) {
-                sendMessageToWhatsApp(response);
+                if (!response.isEmpty()) sendMessageToWhatsApp(response);
             }
-
         }
         return "";
     }

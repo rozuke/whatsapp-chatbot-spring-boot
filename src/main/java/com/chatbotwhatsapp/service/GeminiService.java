@@ -31,12 +31,12 @@ public class GeminiService implements AIModelService {
     @Value("${gemini.api.key}")
     private String key;
 
-    private final String PROMPT = ChatBotConstant.getPrompt();
-
-
     @Override
     public String getResponseFromAIModel(String context) {
         String formatURL = geminiURL + key;
+        System.out.println("**********KEY***********");
+        System.out.println(formatURL);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         RequestGemini requestGemini = formatRequestFromGemini(context);
@@ -73,7 +73,7 @@ public class GeminiService implements AIModelService {
 
     private RequestGemini formatRequestFromGemini(String text) {
         return new RequestGemini(new ArrayList<>(List.of(
-                new Content(new ArrayList<>(List.of(new Part(PROMPT + text))))
+                new Content(new ArrayList<>(List.of(new Part(ChatBotConstant.PROMPT + text))))
         )));
 
     }
