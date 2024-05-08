@@ -1,10 +1,9 @@
 package com.chatbotwhatsapp.service;
 
+import com.chatbotwhatsapp.model.DialogflowMessage;
 import com.chatbotwhatsapp.util.ChatBotConstant;
+import com.chatbotwhatsapp.util.ContentType;
 import com.google.cloud.dialogflow.cx.v3.*;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
@@ -17,9 +16,6 @@ import java.util.regex.Matcher;
 public class DialogFlowService {
 
 
-    @Autowired
-    private GeminiService geminiClient;
-
     @Value("${dialogflow.api.project-id}")
     private String projectId;
 
@@ -29,10 +25,10 @@ public class DialogFlowService {
     @Value("${dialogflow.api.region-id}")
     private String regionId;
 
-    private UUID sessionId = UUID.randomUUID();
+    private final UUID sessionId = UUID.randomUUID();
     private final String API_DIRECTION = "-dialogflow.googleapis.com:443";
 
-    public List<String> getResponseMessageProcessed(String intentMessage) {
+    public List<DialogflowMessage> getResponseMessageProcessed(String intentMessage) {
         try {
                 SessionsSettings.Builder sessionsSettings = SessionsSettings
                         .newBuilder()
@@ -43,12 +39,12 @@ public class DialogFlowService {
                     return getMessages(detectIntentResponse);
                 }
             } catch (IOException e) {
-                return List.of("No se sobre eso");
+                return List.of();
             }
     }
 
-    private List<String> getMessages(DetectIntentResponse detectIntentResponse) {
-        List<String> processedMessages = new ArrayList<>();
+    private List<DialogflowMessage> getMessages(DetectIntentResponse detectIntentResponse) {
+        List<DialogflowMessage> messages = new ArrayList<>();
         System.out.println("*********Intent**********");
         System.out.println(detectIntentResponse.getQueryResult().getCurrentPage().getDisplayName());
         if (existMessages(detectIntentResponse)) {
@@ -57,16 +53,14 @@ public class DialogFlowService {
                 if (!message.getText().getTextList().isEmpty()) {
                     String text = message.getText().getText(0);
                     if (isURL(text)) {
-                        processedMessages.add(text);
+                        messages.add(new DialogflowMessage(ContentType.URL, text));
                     } else {
-                        String processedMessage = geminiClient.getResponseFromAIModel(text);
-                        processedMessages.add(processedMessage);
+                        messages.add(new DialogflowMessage(ContentType.TEXT, text));
                     }
-
                 }
             }
         }
-        return processedMessages;
+        return messages;
     }
 
     private boolean isURL(String url){
@@ -92,11 +86,6 @@ public class DialogFlowService {
                 .setQueryInput(queryInput)
                 .build();
         return sessionsClient.detectIntent(detectIntentRequest);
-    }
-
-    private String extractTextFromJSON(String json) {
-        JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
-        return jsonObject.get("text").getAsString();
     }
 
 }

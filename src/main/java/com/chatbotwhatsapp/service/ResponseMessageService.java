@@ -1,5 +1,6 @@
 package com.chatbotwhatsapp.service;
 
+import com.chatbotwhatsapp.model.DialogflowMessage;
 import com.chatbotwhatsapp.model.whatsapp.requestMessage.RequestMessage;
 import com.chatbotwhatsapp.model.whatsapp.requestMessage.TextResponse;
 import com.chatbotwhatsapp.model.whatsapp.responseMessage.Message;
@@ -59,9 +60,9 @@ public class ResponseMessageService {
                 userRepository.save(new User(phoneNumber, name));
             }
 
-            List<String> listResponse = dialogFlowService.getResponseMessageProcessed(messageBody);
-            for (String response: listResponse) {
-                if (!response.isEmpty()) sendMessageToWhatsApp(response);
+            List<DialogflowMessage> listResponse = dialogFlowService.getResponseMessageProcessed(messageBody);
+            for (DialogflowMessage response: listResponse) {
+                if (!response.content().isEmpty()) sendMessageToWhatsApp(response.content());
             }
         }
         return "";
