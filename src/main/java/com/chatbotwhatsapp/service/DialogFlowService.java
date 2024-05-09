@@ -45,8 +45,6 @@ public class DialogFlowService {
 
     private List<DialogflowMessage> getMessages(DetectIntentResponse detectIntentResponse) {
         List<DialogflowMessage> messages = new ArrayList<>();
-        System.out.println("*********Intent**********");
-        System.out.println(detectIntentResponse.getQueryResult().getCurrentPage().getDisplayName());
         if (existMessages(detectIntentResponse)) {
             for (ResponseMessage message: detectIntentResponse.getQueryResult().getResponseMessagesList()) {
 
@@ -79,7 +77,7 @@ public class DialogFlowService {
                         TextInput.newBuilder()
                                 .setText(message)
                                 .build()
-                ).setLanguageCode("es")
+                ).setLanguageCode(ChatBotConstant.BOT_LANGUAGE)
                 .build();
         DetectIntentRequest detectIntentRequest = DetectIntentRequest.newBuilder()
                 .setSession(sessionName.toString())
