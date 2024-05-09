@@ -7,9 +7,7 @@ import com.google.cloud.dialogflow.cx.v3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 
 @Service
@@ -28,7 +26,7 @@ public class DialogFlowService {
     private final UUID sessionId = UUID.randomUUID();
     private final String API_DIRECTION = "-dialogflow.googleapis.com:443";
 
-    public List<DialogflowMessage> getResponseMessageProcessed(String intentMessage) {
+    public Queue<DialogflowMessage> getResponseMessageProcessed(String intentMessage) {
         try {
                 SessionsSettings.Builder sessionsSettings = SessionsSettings
                         .newBuilder()
@@ -39,12 +37,12 @@ public class DialogFlowService {
                     return getMessages(detectIntentResponse);
                 }
             } catch (IOException e) {
-                return List.of();
+                return new LinkedList<>();
             }
     }
 
-    private List<DialogflowMessage> getMessages(DetectIntentResponse detectIntentResponse) {
-        List<DialogflowMessage> messages = new ArrayList<>();
+    private Queue<DialogflowMessage> getMessages(DetectIntentResponse detectIntentResponse) {
+        Queue<DialogflowMessage> messages = new LinkedList<>();
         if (existMessages(detectIntentResponse)) {
             for (ResponseMessage message: detectIntentResponse.getQueryResult().getResponseMessagesList()) {
 

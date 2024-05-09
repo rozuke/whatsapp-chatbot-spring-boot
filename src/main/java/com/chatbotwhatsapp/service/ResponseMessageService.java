@@ -22,6 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +34,8 @@ public class ResponseMessageService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     private final Gson gson = new Gson();
+
+    private final Timer timer = new Timer();
 
     @Autowired
     private UserRepository userRepository;
@@ -46,14 +51,14 @@ public class ResponseMessageService {
     @Value("${whatsapp.api.token}")
     private String bearerToken;
 
-    public String sendMessageToWhatsApp(String phoneNumber, TypeWhatsAppMessage typeMessage) {
+    public boolean sendRequestMessageToWhatsApp(String phoneNumber, TypeWhatsAppMessage typeMessage) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "Bearer " + bearerToken);
         String messageRequest = buildJson(phoneNumber, typeMessage);
         HttpEntity<String> entity = new HttpEntity<>(messageRequest, headers);
         ResponseEntity<String> responseEntity = restTemplate.postForEntity(whatsappWebhookURL, entity, String.class);
-        return responseEntity.getBody();
+        return responseEntity.getStatusCode().is2xxSuccessful();
     }
 
     public String sendMessageProcessed(String messageJson) {
@@ -61,28 +66,59 @@ public class ResponseMessageService {
         List<Message> listMessages = getMessages(responseMessage);
         if (listMessages != null && !listMessages.isEmpty()) {
             String phoneNumber = getPhoneNumberFromMessage(listMessages);
-            if (!existPhoneNumber(phoneNumber)) {
-                String name = getNameFromResponse(responseMessage);
-                userRepository.save(new User(phoneNumber, name));
-            }
+            savePhoneNumberIfNotExists(phoneNumber, responseMessage);
             String messageBody = getMessage(listMessages);
-            List<DialogflowMessage> listResponse = dialogFlowService.getResponseMessageProcessed(messageBody);
-            for (DialogflowMessage response : listResponse) {
-                if (!response.content().isEmpty()) {
-                    if (response.type().equals(ContentType.URL)) {
-                        TypeWhatsAppMessage fileType = getFileTypeFromUrl(response.content());
-                        sendMessageToWhatsApp(phoneNumber, fileType);
+            Queue<DialogflowMessage> queueResponse = dialogFlowService.getResponseMessageProcessed(messageBody);
+//            while (!queueResponse.isEmpty()) {
+//                DialogflowMessage response = queueResponse.poll();
+//                if (!response.content().isEmpty()) {
+//                    boolean successMessage = sendWhatsAppMessage(response, phoneNumber);
+//                }
+//
+//            }
+            sendMessageSequentially(queueResponse, phoneNumber);
 
-                    } else {
-                        JsonObject textMessage = new JsonObject();
-                        textMessage.addProperty("body", response.content());
-                        TypeWhatsAppMessage textType = new TypeWhatsAppMessage("text", textMessage);
-                        sendMessageToWhatsApp(phoneNumber, textType);
-                    }
-                }
-            }
         }
         return "Something went wrong";
+    }
+
+    private void sendMessageSequentially(Queue<DialogflowMessage> queue, String phoneNumber) {
+        if (!queue.isEmpty()) {
+            DialogflowMessage response = queue.poll();
+            if (!response.content().isEmpty()) {
+                boolean successMessage = sendWhatsAppMessage(response, phoneNumber);
+                if (successMessage) {
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            sendMessageSequentially(queue, phoneNumber);
+                        }
+                    }, 2000);
+                }
+            }
+
+        }
+
+    }
+
+    private boolean sendWhatsAppMessage(DialogflowMessage response, String phoneNumber) {
+        TypeWhatsAppMessage messageType;
+        if (response.type().equals(ContentType.URL)) messageType = getFileTypeFromUrl(response.content());
+        else {
+            JsonObject textMessage = new JsonObject();
+            textMessage.addProperty("body", response.content());
+            messageType = new TypeWhatsAppMessage(FileType.TEXT.toString(), textMessage);
+
+        }
+        return sendRequestMessageToWhatsApp(phoneNumber, messageType);
+
+    }
+
+    private void savePhoneNumberIfNotExists(String phoneNumber, ResponseMessage responseMessage) {
+        if (!existPhoneNumber(phoneNumber)) {
+            String name = getNameFromResponse(responseMessage);
+            userRepository.save(new User(phoneNumber, name));
+        }
     }
 
     public TypeWhatsAppMessage getFileTypeFromUrl(String url) {

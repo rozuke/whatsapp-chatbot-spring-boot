@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Queue;
 
 
 @RestController
@@ -19,7 +20,7 @@ public class DialogFlowController {
 
 
     @PostMapping("/response")
-    public ResponseEntity<List<DialogflowMessage>> postProcessRequestFromPostman(@RequestBody String json) {
+    public ResponseEntity<Queue<DialogflowMessage>> postProcessRequestFromPostman(@RequestBody String json) {
         return new ResponseEntity<>(dialogFlowService.getResponseMessageProcessed(json), HttpStatus.OK);
     }
 
