@@ -33,6 +33,7 @@ public class DialogFlowService {
                         .setEndpoint(regionId + API_DIRECTION);
 
                 try (SessionsClient sessionsClient = SessionsClient.create(sessionsSettings.build())) {
+
                     DetectIntentResponse detectIntentResponse = getIntentResponseFromDialogflow(intentMessage, sessionId.toString(),sessionsClient);
                     return getMessages(detectIntentResponse);
                 }

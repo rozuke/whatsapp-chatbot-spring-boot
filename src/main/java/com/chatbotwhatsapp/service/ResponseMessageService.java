@@ -2,8 +2,6 @@ package com.chatbotwhatsapp.service;
 
 import com.chatbotwhatsapp.model.DialogflowMessage;
 import com.chatbotwhatsapp.model.TypeWhatsAppMessage;
-import com.chatbotwhatsapp.model.whatsapp.requestMessage.RequestMessage;
-import com.chatbotwhatsapp.model.whatsapp.requestMessage.TextResponse;
 import com.chatbotwhatsapp.model.whatsapp.responseMessage.Message;
 import com.chatbotwhatsapp.model.whatsapp.responseMessage.ResponseMessage;
 import com.chatbotwhatsapp.persistence.crud.UserRepository;
@@ -31,25 +29,19 @@ import java.util.regex.Pattern;
 @Service
 public class ResponseMessageService {
 
-    private final RestTemplate restTemplate = new RestTemplate();
-
-    private final Gson gson = new Gson();
-
-    private final Timer timer = new Timer();
-
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private DialogFlowService dialogFlowService;
-
-    private final Pattern pattern = Pattern.compile("\\.(\\w+)$");
-
-
     @Value("${whatsapp.webhook.url}")
     private String whatsappWebhookURL;
     @Value("${whatsapp.api.token}")
     private String bearerToken;
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final Gson gson = new Gson();
+    private final Timer timer = new Timer();
+    private final Pattern pattern = Pattern.compile("\\.(\\w+)$");
+
 
     public boolean sendRequestMessageToWhatsApp(String phoneNumber, TypeWhatsAppMessage typeMessage) {
         HttpHeaders headers = new HttpHeaders();
@@ -69,13 +61,6 @@ public class ResponseMessageService {
             savePhoneNumberIfNotExists(phoneNumber, responseMessage);
             String messageBody = getMessage(listMessages);
             Queue<DialogflowMessage> queueResponse = dialogFlowService.getResponseMessageProcessed(messageBody);
-//            while (!queueResponse.isEmpty()) {
-//                DialogflowMessage response = queueResponse.poll();
-//                if (!response.content().isEmpty()) {
-//                    boolean successMessage = sendWhatsAppMessage(response, phoneNumber);
-//                }
-//
-//            }
             sendMessageSequentially(queueResponse, phoneNumber);
 
         }
@@ -178,12 +163,4 @@ public class ResponseMessageService {
         return gson.toJson(jsonObject);
     }
 
-    private RequestMessage formatMessage(String message, String phoneNumber, TypeWhatsAppMessage typeMessage) {
-        return new RequestMessage("whatsapp",
-                "individual",
-                phoneNumber,
-                "text",
-                new TextResponse(false, message)
-        );
-    }
 }
