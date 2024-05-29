@@ -34,8 +34,6 @@ public class GeminiService implements AIModelService {
     @Override
     public String getResponseFromAIModel(String context) {
         String formatURL = geminiURL + key;
-        System.out.println("**********KEY***********");
-        System.out.println(formatURL);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
