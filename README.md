@@ -63,18 +63,13 @@ To set up the project locally  follow these steps:
 
 5. Put your credentials in the file. You can remove the credentials that are commenting as optional and delete the corresponding flies that may cause problems.
 
-6. Run the following command to start the application and the required services defined in the docker-compose.yml file:
-```bash
-docker-compose up -d
-```
+6. Build the project using Maven.
 
-7. Build the project using Maven.
+7. Run the application using the appropriate command.
 
-8. Run the application using the appropriate command.
+8. Expose your application to internet, you can use [ngrok](https://ngrok.com/).
 
-9. Expose your application to internet, you can use [ngrok](https://ngrok.com/).
-
-10. Register your endpoint on WhatsApp webhook.
+9. Register your endpoint on WhatsApp webhook.
 
 ## Usage
 You can chat with the bot and watch the responses with the "training phrases" that it stablishs in the dialogflowcx agent. To recieve multimedia messages, you only have to put the link to the content in your bucket or any other place where you can save and share the media. Read the documentation about the [format files](http://https://developers.facebook.com/docs/whatsapp/api/messages/message-templates/media-message-templates "format files") that  are compatible with Whatsapp messages.
